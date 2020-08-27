@@ -20,21 +20,16 @@ class Local_Kibana_settings():
         self.message_ru = {}  # словарь "messages"  с индексами вместо переменных, русский
         self.ru = {}  # словарь "messages" с русскими словами
         self.data_ru = {}  #
-        self.ch_word = {}
         self.open_json()
         self.index_var()
         self.translate()
         self.replace_apostrof()
         self.replace_var()
-        self.form_word()
-        self.translate_word()
-        self.replace_word()
         self.save_json()
 
     def open_json(self):
         with open(self.openfile, 'r', encoding='utf-8') as fh: # /your_path/ - ваша папка с файлом китайской локализации
             self.data = json.load(fh) #загружаем из файла китайской локализации данные в словарь data
-
 
     def index_var(self): # индексация пременных
         self.ch = self.data["messages"]  # словарь "messages" с китайскими словами
@@ -77,7 +72,8 @@ class Local_Kibana_settings():
                 self.message_ru[key] = self.message_ch[key] #
             n += 1
             print(n)
-    # замена кавычки " на апостроф `
+    
+	# замена кавычки " на апостроф `
     def replace_apostrof(self):
         for key, value in self.message_ru.items(): # просмотр словаря "messages"  с индексами вместо переменных, русский
             if '"' in value: # проверка наличия кавычек
@@ -93,54 +89,13 @@ class Local_Kibana_settings():
                 stroka = stroka.replace(i[0],i[1]) # замена индексов на переменные
             self.ru[key] = stroka # формирование словаря "messages" с русскими словами
 
-    # перевод отдельных слов, оставшихся без перевода
-
-    def form_word(self):
-        rus = self.ru
-        for key in rus:
-            rus[key] = rus[key] + " " # добавление технического пробела
-            letters_china = re.findall(u'[\u4e00-\u9fff]', rus[key]) # список китайских букв в строке
-            words = [] # список китайских слов в строке
-            if letters_china != []:
-                n = 0
-                word = ""
-                for letter in rus[key]:
-                    try:
-                        if letter == letters_china[n]:
-                            word += letters_china[n]
-                            n += 1
-                        elif word != "":
-                                words.append(word)
-                                word = ""
-                    except:
-                        pass
-                self.ch_word[key] = words
-
-    def translate_word(self):
-        n = 0
-        for key in self.ch_word:
-            if self.ch_word[key] != []:
-                ch_rus = []
-                for value in self.ch[key]:
-                    result = self.translator.translate(value, src='zh-CN', dest=self.dest)  # результат перевода
-                    time.sleep(1)  # таймаут для успеха перевода
-                    ch_rus.append([value,result.text])
-                    n += 1
-                    print(n)
-                self.ch_word[key] = ch_rus  # формирование списка  китайских слов ,и их перевода на русский
-
-    # Замена китайских слов на русские в словаре ru
-    def replace_word(self):
-        for key in self.ru:
-            if self.ch_word[key] != []:
-                for value in self.ch_word[key]:
-                    self.ru[key] = self.ru[key].replace(value[0], value[1])
-        self.data_ru = self.data  # присвоение данных файла китайской локализации
-        self.data_ru["messages"] = self.ru  # изменение словаря "messages" с русскими словами
-
+   
+   
 # формирование файла русской локализации
     def save_json(self):
-        with open(self.savefile, 'w', encoding='utf-8') as file:
+        self.data_ru = self.data  # присвоение данных файла китайской локализации
+        self.data_ru["messages"] = self.ru  # изменение словаря "messages" с русскими словами
+		with open(self.savefile, 'w', encoding='utf-8') as file:
             json.dump(self.data_ru, file, indent=4, ensure_ascii=False) # сохраняем данные в файл русской локализации
 
 
